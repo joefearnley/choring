@@ -1,4 +1,4 @@
 # Upgrade path: Django 3.2 LTS
 Django>=5.2,<6
 djangorestframework>=3.18,<4
-# Pin other dependencies here as needed
+python-dateutil>=2.8
