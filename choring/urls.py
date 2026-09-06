@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework import routers
+from django.views.generic import TemplateView
 
 from choring.chores import views
 
@@ -25,6 +26,8 @@ router.register(r'groups', views.GroupViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', TemplateView.as_view(template_name='base.html'), name='home'),
     path('', include(router.urls)),
+    path('accounts/', include('accounts.urls', namespace='accounts')),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
