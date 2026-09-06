@@ -17,6 +17,11 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework import routers
 from django.views.generic import TemplateView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+from accounts.api import RegisterAPIView, ProfileAPIView
 
 from choring.chores import views
 
@@ -29,5 +34,16 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name='base.html'), name='home'),
     path('', include(router.urls)),
     path('accounts/', include('accounts.urls', namespace='accounts')),
+    # JWT auth endpoints
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/accounts/register/', RegisterAPIView.as_view(), name='api-register'),
+    path('api/accounts/profile/', ProfileAPIView.as_view(), name='api-profile'),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+]
+
+# Serve SPA
+from django.views.generic import TemplateView
+urlpatterns += [
+    path('app/', TemplateView.as_view(template_name='frontend/index.html'), name='app'),
 ]
