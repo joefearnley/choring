@@ -56,3 +56,17 @@ class Chore(models.Model):
 
 
 # Create your models here.
+
+
+class ChoreOccurrence(models.Model):
+    chore = models.ForeignKey(Chore, on_delete=models.CASCADE, related_name='occurrences')
+    occurrence_date = models.DateField()
+    assigned_to = models.ForeignKey(get_user_model(), null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-occurrence_date',)
+        unique_together = ('chore', 'occurrence_date')
+
+    def __str__(self):
+        return f"{self.chore.title} on {self.occurrence_date}"
