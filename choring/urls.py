@@ -31,8 +31,10 @@ router.register(r'groups', views.GroupViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', TemplateView.as_view(template_name='base.html'), name='home'),
-    path('', include(router.urls)),
+    # Serve SPA at root
+    path('', TemplateView.as_view(template_name='frontend/index.html'), name='home'),
+    # API router under /api/
+    path('api/', include(router.urls)),
     path('accounts/', include('accounts.urls', namespace='accounts')),
     # JWT auth endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -42,7 +44,6 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
 
-# Serve SPA
 from django.views.generic import TemplateView
 urlpatterns += [
     path('app/', TemplateView.as_view(template_name='frontend/index.html'), name='app'),
