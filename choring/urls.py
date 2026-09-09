@@ -35,6 +35,7 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name='frontend/index.html'), name='home'),
     # API router under /api/
     path('api/', include(router.urls)),
+    path('api/chores/week/', views.chores_for_week, name='api-chores-week'),
     path('accounts/', include('accounts.urls', namespace='accounts')),
     # JWT auth endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -46,5 +47,4 @@ urlpatterns = [
 
 from django.views.generic import TemplateView
 urlpatterns += [
-    path('app/', TemplateView.as_view(template_name='frontend/index.html'), name='app'),
 ]
