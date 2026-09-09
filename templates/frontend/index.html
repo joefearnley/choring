@@ -13,11 +13,12 @@
         <p class="text-sm text-gray-600">Shows chores due this week and assigned users.</p>
       </header>
 
-      <section id="week" class="grid grid-cols-1 gap-4">
-        <div class="text-center text-gray-500">Loading chores…</div>
-      </section>
+      <div id="root"></div>
     </div>
 
-    <script src="/static/frontend/weekly.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel" src="/static/frontend/weekly.jsx"></script>
   </body>
 </html>
