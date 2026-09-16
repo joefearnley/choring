@@ -36,6 +36,8 @@ urlpatterns = [
     # API router under /api/
     path('api/', include(router.urls)),
     path('api/chores/week/', views.chores_for_week, name='api-chores-week'),
+    path('api/chores/range/', views.chores_for_range, name='api-chores-range'),
+    path('api/chores/week/', views.chores_for_week, name='api-chores-week'),
     path('accounts/', include('accounts.urls', namespace='accounts')),
     # JWT auth endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

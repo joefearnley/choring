@@ -64,6 +64,64 @@ def chores_for_week(request):
     return Response(results)
 
 
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def chores_for_range(request):
+    """Return chore occurrences between `start` and `end` (ISO dates)."""
+    qs_start = request.GET.get('start')
+    qs_end = request.GET.get('end')
+    today = date.today()
+    try:
+        if qs_start:
+            start = date.fromisoformat(qs_start)
+        else:
+            start = today - timedelta(days=28)
+        if qs_end:
+            end = date.fromisoformat(qs_end)
+        else:
+            end = today + timedelta(days=28)
+    except Exception:
+        return Response({'detail': 'invalid date'}, status=400)
+
+    results = []
+    chores = Chore.objects.filter(active=True)
+    for chore in chores:
+        if chore.recurrence == Chore.RECURRENCE_NONE:
+            if chore.due_date and start <= chore.due_date <= end:
+                results.append({
+                    'date': chore.due_date,
+                    'title': chore.title,
+                    'assigned_to': chore.assigned_to.username if chore.assigned_to else None,
+                    'recurrence': chore.recurrence,
+                })
+        else:
+            base = chore.start_date or chore.due_date
+            if not base:
+                continue
+            current = base
+            while current < start:
+                if chore.recurrence == chore.RECURRENCE_WEEKLY:
+                    current = current + timedelta(days=7)
+                else:
+                    current = current + relativedelta(months=1)
+            while current <= end:
+                results.append({
+                    'date': current,
+                    'title': chore.title,
+                    'assigned_to': chore.assigned_to.username if chore.assigned_to else None,
+                    'recurrence': chore.recurrence,
+                })
+                if chore.recurrence == chore.RECURRENCE_WEEKLY:
+                    current = current + timedelta(days=7)
+                else:
+                    current = current + relativedelta(months=1)
+
+    results.sort(key=lambda r: r['date'])
+    for r in results:
+        r['date'] = r['date'].isoformat()
+    return Response(results)
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
