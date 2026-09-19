@@ -22,15 +22,21 @@ function DayColumn({date, items}){
   const dt = new Date(date);
   return (
     <div className="bg-white shadow rounded p-4">
-      <h3 className="font-semibold mb-2">{dt.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'})}</h3>
+      <h3 className="font-semibold mb-2 text-indigo-700">{dt.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'})}</h3>
       <ul className="space-y-2">
         {items.map((item,i) => (
           <li key={i} className="p-2 border rounded flex justify-between items-center">
             <div>
-              <div className="font-medium">{item.title}</div>
+              <div className="font-medium text-gray-800">{item.title}</div>
               <div className="text-xs text-gray-500">{item.recurrence}</div>
             </div>
-            <div className="text-sm text-gray-700">{item.assigned_to || 'Unassigned'}</div>
+            <div className="text-sm">
+              {item.assigned_to ? (
+                <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">{item.assigned_to}</span>
+              ) : (
+                <span className="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Unassigned</span>
+              )}
+            </div>
           </li>
         ))}
       </ul>
@@ -84,13 +90,18 @@ function App(){
     <div className="space-y-6">
       {overdue.length > 0 && (
         <section>
-          <h2 className="text-xl font-semibold">Past Due</h2>
+          <h2 className="text-xl font-semibold text-red-700">Past Due</h2>
           <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(groupByDate(overdue)).sort().reverse().map(([d, items]) => (
-              <div key={d} className="bg-white shadow rounded p-4">
-                <h3 className="font-semibold mb-2">{new Date(d).toLocaleDateString()}</h3>
+              <div key={d} className="bg-white shadow rounded p-4 border-l-4 border-red-300">
+                <h3 className="font-semibold mb-2 text-red-600">{new Date(d).toLocaleDateString()}</h3>
                 <ul className="space-y-2">
-                  {items.map((it,i)=>(<li key={i} className="p-2 border rounded flex justify-between items-center"><div className="font-medium">{it.title}</div><div className="text-sm text-gray-700">{it.assigned_to||'Unassigned'}</div></li>))}
+                  {items.map((it,i)=>(
+                    <li key={i} className="p-2 border rounded flex justify-between items-center">
+                      <div className="font-medium text-gray-800">{it.title}</div>
+                      <div>{it.assigned_to ? (<span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">{it.assigned_to}</span>) : (<span className="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Unassigned</span>)}</div>
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}
@@ -104,7 +115,7 @@ function App(){
           {weekKeys.length === 0 && <div className="text-gray-500">No upcoming chores.</div>}
           {weekKeys.map(wk => (
             <div key={wk} className="bg-white shadow rounded p-4">
-              <h3 className="font-semibold mb-2">Week of {new Date(wk).toLocaleDateString()}</h3>
+              <h3 className="font-semibold mb-2 text-indigo-600">Week of {new Date(wk).toLocaleDateString()}</h3>
               <ul className="space-y-2">
                 {weeks[wk].map((it,i)=>(<li key={i} className="p-2 border rounded flex justify-between items-center"><div><div className="font-medium">{it.title}</div><div className="text-xs text-gray-500">{it.recurrence}</div></div><div className="text-sm text-gray-700">{it.assigned_to||'Unassigned'}</div></li>))}
               </ul>
