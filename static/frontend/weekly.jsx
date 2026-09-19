@@ -21,20 +21,29 @@ function escapeHtml(str){
 function DayColumn({date, items}){
   const dt = new Date(date);
   return (
-    <div className="bg-white shadow rounded p-4">
-      <h3 className="font-semibold mb-2 text-indigo-700">{dt.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'})}</h3>
-      <ul className="space-y-2">
+    <div className="bg-white shadow-lg rounded-lg p-4 hover:shadow-xl transition-shadow">
+      <h3 className="font-semibold mb-2 text-indigo-700 text-lg">{dt.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'})}</h3>
+      <ul className="space-y-3">
         {items.map((item,i) => (
-          <li key={i} className="p-2 border rounded flex justify-between items-center">
-            <div>
-              <div className="font-medium text-gray-800">{item.title}</div>
-              <div className="text-xs text-gray-500">{item.recurrence}</div>
+          <li key={i} className="p-3 border border-gray-100 rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors">
+            <div className="flex-1">
+              <div className={`font-medium text-gray-900 ${item.completed ? 'line-through text-gray-400' : ''}`}>{item.title}</div>
+              <div className="text-xs text-gray-500 mt-1">{item.recurrence} • {new Date(item.date).toLocaleDateString()}</div>
             </div>
-            <div className="text-sm">
+            <div className="text-sm flex items-center space-x-3">
               {item.assigned_to ? (
-                <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">{item.assigned_to}</span>
+                (() => {
+                  const color = item.assigned_color || 'indigo';
+                  const cls = `inline-block bg-${color}-100 text-${color}-800 px-3 py-1 rounded-full text-xs font-semibold`;
+                  return <span className={cls}>{item.assigned_to}</span>;
+                })()
               ) : (
-                <span className="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Unassigned</span>
+                <span className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Unassigned</span>
+              )}
+              {item.completed ? (
+                <span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Done</span>
+              ) : (
+                <button onClick={async (e)=>{ e.currentTarget.disabled = true; await fetch('/api/chores/complete/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chore_id: item.chore_id || item.id, date: item.date})}); const today = new Date(); const start = startOfISODate(addDays(today, -28)); const end = startOfISODate(addDays(today, 28)); fetchRange(start, end).then(data => setItems(data)); }} className="text-xs bg-blue-600 text-white px-3 py-1 rounded shadow">Complete</button>
               )}
             </div>
           </li>
@@ -93,13 +102,16 @@ function App(){
           <h2 className="text-xl font-semibold text-red-700">Past Due</h2>
           <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(groupByDate(overdue)).sort().reverse().map(([d, items]) => (
-              <div key={d} className="bg-white shadow rounded p-4 border-l-4 border-red-300">
+              <div key={d} className="bg-white shadow-lg rounded-lg p-4 border-l-4 border-red-300">
                 <h3 className="font-semibold mb-2 text-red-600">{new Date(d).toLocaleDateString()}</h3>
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                   {items.map((it,i)=>(
-                    <li key={i} className="p-2 border rounded flex justify-between items-center">
-                      <div className="font-medium text-gray-800">{it.title}</div>
-                      <div>{it.assigned_to ? (<span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">{it.assigned_to}</span>) : (<span className="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Unassigned</span>)}</div>
+                    <li key={i} className="p-3 border border-gray-100 rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors">
+                      <div className={`font-medium text-gray-900 ${it.completed ? 'line-through text-gray-400' : ''}`}>{it.title}</div>
+                      <div className="flex items-center space-x-3">
+                        {it.assigned_to ? (() => { const color = it.assigned_color || 'indigo'; const cls = `inline-block bg-${color}-100 text-${color}-800 px-3 py-1 rounded-full text-xs font-semibold`; return <span className={cls}>{it.assigned_to}</span>; })() : (<span className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Unassigned</span>)}
+                        {it.completed ? (<span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Done</span>) : (<button onClick={async (e)=>{ e.currentTarget.disabled = true; await fetch('/api/chores/complete/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chore_id: it.chore_id || it.id, date: it.date})}); const today = new Date(); const start = startOfISODate(addDays(today, -28)); const end = startOfISODate(addDays(today, 28)); fetchRange(start, end).then(data => setItems(data)); }} className="text-xs bg-blue-600 text-white px-3 py-1 rounded shadow">Complete</button>)}
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -117,7 +129,18 @@ function App(){
             <div key={wk} className="bg-white shadow rounded p-4">
               <h3 className="font-semibold mb-2 text-indigo-600">Week of {new Date(wk).toLocaleDateString()}</h3>
               <ul className="space-y-2">
-                {weeks[wk].map((it,i)=>(<li key={i} className="p-2 border rounded flex justify-between items-center"><div><div className="font-medium">{it.title}</div><div className="text-xs text-gray-500">{it.recurrence}</div></div><div className="text-sm text-gray-700">{it.assigned_to||'Unassigned'}</div></li>))}
+                {weeks[wk].map((it,i)=>(
+                  <li key={i} className="p-3 border border-gray-100 rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors">
+                    <div>
+                      <div className={`font-medium ${it.completed ? 'line-through text-gray-400' : ''}`}>{it.title}</div>
+                      <div className="text-xs text-gray-500">{it.recurrence}</div>
+                    </div>
+                    <div className="text-sm flex items-center space-x-3">
+                      {it.assigned_to ? (() => { const color = it.assigned_color || 'indigo'; const cls = `inline-block bg-${color}-100 text-${color}-800 px-3 py-1 rounded-full text-xs font-semibold`; return <span className={cls}>{it.assigned_to}</span>; })() : (<span className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Unassigned</span>)}
+                      {it.completed ? (<span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Done</span>) : (<button onClick={async (e)=>{ e.currentTarget.disabled = true; await fetch('/api/chores/complete/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chore_id: it.chore_id || it.id, date: it.date})}); const today = new Date(); const start = startOfISODate(addDays(today, -28)); const end = startOfISODate(addDays(today, 28)); fetchRange(start, end).then(data => setItems(data)); }} className="text-xs bg-blue-600 text-white px-3 py-1 rounded shadow">Complete</button>)}
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
           ))}

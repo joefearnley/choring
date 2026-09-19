@@ -6,6 +6,11 @@ from django.contrib import admin
 
 from .models import Chore
 from .models import ChoreOccurrence
+from .models import UserProfile
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from django import forms
+from django.utils.html import format_html
 from django import forms
 from django.urls import path
 from django.template.response import TemplateResponse
@@ -136,3 +141,44 @@ class ChoreOccurrenceAdmin(admin.ModelAdmin):
 	list_display = ('chore', 'occurrence_date', 'assigned_to', 'created_at')
 	list_filter = ('occurrence_date', 'assigned_to')
 	search_fields = ('chore__title', 'assigned_to__username', 'assigned_to__email')
+
+
+# Add user profile inline to the default User admin so admins can pick colors
+class UserProfileInline(admin.StackedInline):
+	model = UserProfile
+	can_delete = False
+	verbose_name_plural = 'profile'
+	fields = ('color', 'color_preview')
+	readonly_fields = ('color_preview',)
+
+	class UserProfileForm(forms.ModelForm):
+		class Meta:
+			model = UserProfile
+			fields = ('color',)
+
+		def clean_color(self):
+			color = self.cleaned_data.get('color')
+			allowed = [c[0] for c in UserProfile.COLOR_CHOICES]
+			if color not in allowed:
+				raise forms.ValidationError('Invalid color choice')
+			return color
+
+	form = UserProfileForm
+
+	def color_preview(self, instance):
+		color = getattr(instance, 'color', 'indigo') if instance else 'indigo'
+		html = format_html('<span id="userprofile-color-preview" class="inline-block px-3 py-1 rounded-full text-xs bg-{}-100 text-{}-800">{}</span>', color, color, color)
+		return html
+	color_preview.short_description = 'Preview'
+
+	class Media:
+		js = ('/static/admin/userprofile_preview.js',)
+
+
+# Re-register User admin with the profile inline
+admin.site.unregister(User)
+
+
+@admin.register(User)
+class UserAdmin(DjangoUserAdmin):
+	inlines = (UserProfileInline,)

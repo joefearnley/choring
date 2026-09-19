@@ -1,0 +1,11 @@
+{
+  "name": "choring-frontend-build",
+  "version": "1.0.0",
+  "private": true,
+  "devDependencies": {
+    "esbuild": "^0.18.0"
+  },
+  "scripts": {
+    "build": "esbuild static/frontend/weekly.jsx static/frontend/completed.jsx --outdir=static/frontend/build --bundle --loader:.jsx=jsx --minify --format=iife"
+  }
+}

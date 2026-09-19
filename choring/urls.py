@@ -33,11 +33,16 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # Serve SPA at root
     path('', TemplateView.as_view(template_name='frontend/index.html'), name='home'),
+    path('completed/', TemplateView.as_view(template_name='frontend/completed.html'), name='completed'),
     # API router under /api/
     path('api/', include(router.urls)),
     path('api/chores/week/', views.chores_for_week, name='api-chores-week'),
     path('api/chores/range/', views.chores_for_range, name='api-chores-range'),
+    path('api/badge-colors/', views.badge_colors, name='api-badge-colors'),
+    path('api/chores/complete/', views.complete_occurrence, name='api-chores-complete'),
     path('api/chores/week/', views.chores_for_week, name='api-chores-week'),
+    path('api/chores/completed/', views.completed_list, name='api-chores-completed'),
+    path('api/chores/uncomplete/', views.uncomplete_occurrence, name='api-chores-uncomplete'),
     path('accounts/', include('accounts.urls', namespace='accounts')),
     # JWT auth endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

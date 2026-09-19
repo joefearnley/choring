@@ -58,3 +58,25 @@ class ChoresRangeAPITest(TestCase):
         for d in expected_dates:
             found = any(item['title'] == self.weekly.title and item['date'] == d for item in data)
             self.assertTrue(found, f'Expected weekly occurrence on {d} not found')
+
+    def test_complete_occurrence_marks_completed(self):
+        # pick one weekly occurrence date
+        start = date.today() - timedelta(days=28)
+        end = date.today() + timedelta(days=28)
+        # compute first upcoming occurrence
+        base = self.weekly.start_date
+        current = base
+        while current < start:
+            current = current + timedelta(days=7)
+        target = current
+
+        # complete it via API
+        resp = self.client.post('/api/chores/complete/', {'chore_id': self.weekly.pk, 'date': target.isoformat()})
+        self.assertEqual(resp.status_code, 200)
+
+        # ensure range API no longer returns completed occurrence
+        resp2 = self.client.get('/api/chores/range/')
+        self.assertEqual(resp2.status_code, 200)
+        data2 = resp2.json()
+        found = any(item['title'] == self.weekly.title and item['date'] == target.isoformat() for item in data2)
+        self.assertFalse(found, 'Completed occurrence should not be returned in range API')

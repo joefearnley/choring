@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Chore(models.Model):
@@ -62,6 +65,8 @@ class ChoreOccurrence(models.Model):
     chore = models.ForeignKey(Chore, on_delete=models.CASCADE, related_name='occurrences')
     occurrence_date = models.DateField()
     assigned_to = models.ForeignKey(get_user_model(), null=True, blank=True, on_delete=models.SET_NULL)
+    completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -70,3 +75,31 @@ class ChoreOccurrence(models.Model):
 
     def __str__(self):
         return f"{self.chore.title} on {self.occurrence_date}"
+
+
+class UserProfile(models.Model):
+    """Simple per-user profile to store UI preferences like badge color."""
+    COLOR_CHOICES = [
+        ('gray', 'Gray'),
+        ('red', 'Red'),
+        ('yellow', 'Yellow'),
+        ('green', 'Green'),
+        ('teal', 'Teal'),
+        ('blue', 'Blue'),
+        ('indigo', 'Indigo'),
+        ('purple', 'Purple'),
+        ('pink', 'Pink'),
+        ('orange', 'Orange'),
+    ]
+
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name='userprofile')
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default='indigo')
+
+    def __str__(self):
+        return f"Profile for {self.user.username}"
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def ensure_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
