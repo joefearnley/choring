@@ -40,13 +40,15 @@ def chores_for_week(request):
                     getattr(getattr(occ.assigned_to, 'userprofile', None), 'color', None) if occ and occ.assigned_to
                     else (getattr(getattr(chore.assigned_to, 'userprofile', None), 'color', None) if chore.assigned_to else None)
                 )
+                # normalize recurrence: treat None or explicit 'none' as empty string
+                rec_val = '' if (chore.recurrence is None or chore.recurrence == Chore.RECURRENCE_NONE) else chore.recurrence
                 results.append({
                     'date': chore.due_date,
                     'title': chore.title,
                     'chore_id': chore.pk,
                     'assigned_to': assigned,
                     'assigned_color': assigned_color,
-                    'recurrence': chore.recurrence,
+                    'recurrence': rec_val,
                     'completed': False,
                 })
         else:
@@ -61,37 +63,35 @@ def chores_for_week(request):
                     current = current + timedelta(days=7)
                 else:
                     current = current + relativedelta(months=1)
-                while current <= end:
-                    occ = persisted_map.get((chore.pk, current))
-                    # skip completed persisted occurrences
-                    if occ and occ.completed:
-                        if chore.recurrence == Chore.RECURRENCE_WEEKLY:
-                            current = current + timedelta(days=7)
-                        else:
-                            current = current + relativedelta(months=1)
-                        continue
-                    assigned = occ.assigned_to.username if occ and occ.assigned_to else (chore.assigned_to.username if chore.assigned_to else None)
-                    assigned_color = (
-                        getattr(getattr(occ.assigned_to, 'userprofile', None), 'color', None) if occ and occ.assigned_to
-                        else (getattr(getattr(chore.assigned_to, 'userprofile', None), 'color', None) if chore.assigned_to else None)
-                    )
-                    results.append({
-                        'date': current,
-                        'title': chore.title,
-                        'chore_id': chore.pk,
-                        'assigned_to': assigned,
-                        'assigned_color': assigned_color,
-                        'recurrence': chore.recurrence,
-                        'completed': False,
-                    })
+            # iterate occurrences up to end
+            while current <= end:
+                occ = persisted_map.get((chore.pk, current))
+                # skip completed persisted occurrences
+                if occ and occ.completed:
                     if chore.recurrence == Chore.RECURRENCE_WEEKLY:
                         current = current + timedelta(days=7)
                     else:
                         current = current + relativedelta(months=1)
-                    if chore.recurrence == Chore.RECURRENCE_WEEKLY:
-                        current = current + timedelta(days=7)
-                    else:
-                        current = current + relativedelta(months=1)
+                    continue
+                assigned = occ.assigned_to.username if occ and occ.assigned_to else (chore.assigned_to.username if chore.assigned_to else None)
+                assigned_color = (
+                    getattr(getattr(occ.assigned_to, 'userprofile', None), 'color', None) if occ and occ.assigned_to
+                    else (getattr(getattr(chore.assigned_to, 'userprofile', None), 'color', None) if chore.assigned_to else None)
+                )
+                rec_val = '' if (chore.recurrence is None or chore.recurrence == Chore.RECURRENCE_NONE) else chore.recurrence
+                results.append({
+                    'date': current,
+                    'title': chore.title,
+                    'chore_id': chore.pk,
+                    'assigned_to': assigned,
+                    'assigned_color': assigned_color,
+                    'recurrence': rec_val,
+                    'completed': False,
+                })
+                if chore.recurrence == Chore.RECURRENCE_WEEKLY:
+                    current = current + timedelta(days=7)
+                else:
+                    current = current + relativedelta(months=1)
 
     # sort by date
     results.sort(key=lambda r: r['date'])
@@ -136,13 +136,14 @@ def chores_for_range(request):
                     getattr(getattr(occ.assigned_to, 'userprofile', None), 'color', None) if occ and occ.assigned_to
                     else (getattr(getattr(chore.assigned_to, 'userprofile', None), 'color', None) if chore.assigned_to else None)
                 )
+                rec_val = '' if (chore.recurrence is None or chore.recurrence == Chore.RECURRENCE_NONE) else chore.recurrence
                 results.append({
                     'date': chore.due_date,
                     'title': chore.title,
                     'chore_id': chore.pk,
                     'assigned_to': assigned,
                     'assigned_color': assigned_color,
-                    'recurrence': chore.recurrence,
+                    'recurrence': rec_val,
                     'completed': False,
                 })
         else:
@@ -169,13 +170,14 @@ def chores_for_range(request):
                     getattr(getattr(occ.assigned_to, 'userprofile', None), 'color', None) if occ and occ.assigned_to
                     else (getattr(getattr(chore.assigned_to, 'userprofile', None), 'color', None) if chore.assigned_to else None)
                 )
+                rec_val = '' if (chore.recurrence is None or chore.recurrence == Chore.RECURRENCE_NONE) else chore.recurrence
                 results.append({
                     'date': current,
                     'title': chore.title,
                     'chore_id': chore.pk,
                     'assigned_to': assigned,
                     'assigned_color': assigned_color,
-                    'recurrence': chore.recurrence,
+                    'recurrence': rec_val,
                     'completed': False,
                 })
                 if chore.recurrence == chore.RECURRENCE_WEEKLY:

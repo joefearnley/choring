@@ -1,4 +1,4 @@
-(function(){
+x(function(){
   async function fetchWeek() {
     try {
       const res = await fetch('/api/chores/week/');

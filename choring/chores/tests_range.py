@@ -80,3 +80,20 @@ class ChoresRangeAPITest(TestCase):
         data2 = resp2.json()
         found = any(item['title'] == self.weekly.title and item['date'] == target.isoformat() for item in data2)
         self.assertFalse(found, 'Completed occurrence should not be returned in range API')
+
+    def test_recurrence_normalization_in_api(self):
+        """Ensure chores with recurrence 'none' are returned as empty string, others preserved."""
+        resp = self.client.get('/api/chores/range/')
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+
+        # overdue (one-off) chore should have recurrence as empty string
+        overdue_iso = (date.today() - timedelta(days=3)).isoformat()
+        overdue_item = next((it for it in data if it['title'] == self.overdue.title and it['date'] == overdue_iso), None)
+        self.assertIsNotNone(overdue_item, 'Overdue occurrence not present')
+        self.assertEqual(overdue_item.get('recurrence', None), '')
+
+        # weekly occurrences should preserve 'weekly'
+        weekly_item = next((it for it in data if it['title'] == self.weekly.title), None)
+        self.assertIsNotNone(weekly_item, 'Weekly occurrence not present')
+        self.assertEqual(weekly_item.get('recurrence', None), self.weekly.recurrence)
