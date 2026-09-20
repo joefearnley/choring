@@ -14,12 +14,14 @@ function CompletedPage(){
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Recently Completed</h2>
         <div className="text-sm text-gray-500">Showing last {items.length} items</div>
+        <div class="mt-3 h-1 w-32 rounded bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
       </div>
       <ul className="space-y-3">
         {items.map((it,i)=>(
           <li key={i} className="p-4 bg-white rounded-lg shadow border border-gray-100 flex justify-between items-center hover:shadow-md transition-shadow">
             <div>
               <div className="font-medium text-gray-900">{it.title}</div>
+              {it.due_date ? <div className="text-xs text-gray-500 mt-1">Due {new Date(it.due_date).toLocaleDateString()}</div> : null}
               <div className="text-xs text-gray-500 mt-1">{it.date} • {it.completed_at}</div>
             </div>
             <div className="flex items-center space-x-3">

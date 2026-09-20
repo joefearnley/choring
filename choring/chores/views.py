@@ -45,6 +45,7 @@ def chores_for_week(request):
                 results.append({
                     'date': chore.due_date,
                     'title': chore.title,
+                    'due_date': chore.due_date,
                     'chore_id': chore.pk,
                     'assigned_to': assigned,
                     'assigned_color': assigned_color,
@@ -82,6 +83,7 @@ def chores_for_week(request):
                 results.append({
                     'date': current,
                     'title': chore.title,
+                    'due_date': chore.due_date,
                     'chore_id': chore.pk,
                     'assigned_to': assigned,
                     'assigned_color': assigned_color,
@@ -140,6 +142,7 @@ def chores_for_range(request):
                 results.append({
                     'date': chore.due_date,
                     'title': chore.title,
+                    'due_date': chore.due_date,
                     'chore_id': chore.pk,
                     'assigned_to': assigned,
                     'assigned_color': assigned_color,
@@ -174,6 +177,7 @@ def chores_for_range(request):
                 results.append({
                     'date': current,
                     'title': chore.title,
+                    'due_date': chore.due_date,
                     'chore_id': chore.pk,
                     'assigned_to': assigned,
                     'assigned_color': assigned_color,
@@ -188,6 +192,11 @@ def chores_for_range(request):
     results.sort(key=lambda r: r['date'])
     for r in results:
         r['date'] = r['date'].isoformat()
+        # serialize due_date if present
+        if r.get('due_date'):
+            r['due_date'] = r['due_date'].isoformat()
+        else:
+            r['due_date'] = None
     return Response(results)
 
 

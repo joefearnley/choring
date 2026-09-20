@@ -15,9 +15,23 @@
       </header>
 
       <nav class="mb-4">
-        <a href="/" class="mr-4 text-indigo-600">Home</a>
-        <a href="/completed/" class="text-indigo-600">Completed</a>
+        <a href="/" data-nav="home" class="mr-4 text-indigo-600">Home</a>
+        <a href="/completed/" data-nav="completed" class="text-indigo-600">Completed</a>
       </nav>
+
+      <script>
+        (function(){
+          try{
+            var path = location.pathname.replace(/\/$/, '') || '/';
+            var map = {'/':'home','/completed':'completed'};
+            var key = map[path] || null;
+            if(key){
+              var el = document.querySelector('a[data-nav="' + key + '"]');
+              if(el){ el.classList.add('font-semibold','text-indigo-900'); }
+            }
+          }catch(e){/* noop */}
+        })();
+      </script>
 
       <div id="root"></div>
     </div>

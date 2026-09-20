@@ -28,7 +28,8 @@ function DayColumn({date, items}){
           <li key={i} className="p-3 border border-gray-100 rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors">
             <div className="flex-1">
               <div className={`font-medium text-gray-900 ${item.completed ? 'line-through text-gray-400' : ''}`}>{item.title}</div>
-              <div className="text-xs text-gray-500 mt-1">{item.recurrence} • {new Date(item.date).toLocaleDateString()}</div>
+              {item.recurrence ? <div className="text-xs text-gray-500 mt-1">{item.recurrence}</div> : null}
+              {item.due_date ? <div className="text-xs text-gray-500 mt-1">Due {new Date(item.due_date).toLocaleDateString()}</div> : null}
             </div>
             <div className="text-sm flex items-center space-x-3">
               {item.assigned_to ? (
@@ -107,7 +108,9 @@ function App(){
                 <ul className="space-y-3">
                   {items.map((it,i)=>(
                     <li key={i} className="p-3 border border-gray-100 rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors">
-                      <div className={`font-medium text-gray-900 ${it.completed ? 'line-through text-gray-400' : ''}`}>{it.title}</div>
+                      <div className={`font-medium text-gray-900 ${it.completed ? 'line-through text-gray-400' : ''}`}>{it.title}
+                        {it.due_date ? <div className="text-xs text-gray-500 mt-1">Due {new Date(it.due_date).toLocaleDateString()}</div> : null}
+                      </div>
                       <div className="flex items-center space-x-3">
                         {it.assigned_to ? (() => { const color = it.assigned_color || 'indigo'; const cls = `inline-block bg-${color}-100 text-${color}-800 px-3 py-1 rounded-full text-xs font-semibold`; return <span className={cls}>{it.assigned_to}</span>; })() : (<span className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Unassigned</span>)}
                         {it.completed ? (<span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Done</span>) : (<button onClick={async (e)=>{ e.currentTarget.disabled = true; await fetch('/api/chores/complete/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chore_id: it.chore_id || it.id, date: it.date})}); const today = new Date(); const start = startOfISODate(addDays(today, -28)); const end = startOfISODate(addDays(today, 28)); fetchRange(start, end).then(data => setItems(data)); }} className="text-xs bg-blue-600 text-white px-3 py-1 rounded shadow">Complete</button>)}
@@ -133,11 +136,12 @@ function App(){
                   <li key={i} className="p-3 border border-gray-100 rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors">
                     <div>
                       <div className={`font-medium ${it.completed ? 'line-through text-gray-400' : ''}`}>{it.title}</div>
-                      <div className="text-xs text-gray-500">{it.recurrence}</div>
+                      {it.recurrence ? <div className="text-xs text-gray-500">{it.recurrence}</div> : null}
+                      {it.due_date ? <div className="text-xs text-gray-500">Due {new Date(it.due_date).toLocaleDateString()}</div> : null}
                     </div>
                     <div className="text-sm flex items-center space-x-3">
                       {it.assigned_to ? (() => { const color = it.assigned_color || 'indigo'; const cls = `inline-block bg-${color}-100 text-${color}-800 px-3 py-1 rounded-full text-xs font-semibold`; return <span className={cls}>{it.assigned_to}</span>; })() : (<span className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Unassigned</span>)}
-                      {it.completed ? (<span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Done</span>) : (<button onClick={async (e)=>{ e.currentTarget.disabled = true; await fetch('/api/chores/complete/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chore_id: it.chore_id || it.id, date: it.date})}); const today = new Date(); const start = startOfISODate(addDays(today, -28)); const end = startOfISODate(addDays(today, 28)); fetchRange(start, end).then(data => setItems(data)); }} className="text-xs bg-blue-600 text-white px-3 py-1 rounded shadow">Complete</button>)}
+                      {it.completed ? (<span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Done</span>) : (<button onClick={async (e)=>{ e.currentTarget.disabled = true; await fetch('/api/chores/complete/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chore_id: it.chore_id || it.id, date: it.date})}); const today = new Date(); const start = startOfISODate(addDays(today, -28)); const end = startOfISODate(addDays(today, 28)); fetchRange(start, end).then(data => setItems(data)); }} className="text-xs bg-blue-500 text-white px-3 py-1 rounded shadow">Complete</button>)}
                     </div>
                   </li>
                 ))}

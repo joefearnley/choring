@@ -11,10 +11,27 @@
       <header class="mb-6">
         <h1 class="text-3xl font-bold text-indigo-700">Completed Chores</h1>
         <p class="text-sm text-indigo-600">Recently completed chores with option to uncomplete.</p>
-        <nav class="mt-3">
-          <a href="/" class="text-indigo-600">← Back to This Week</a>
-        </nav>
+        <div class="mt-3 h-1 w-32 rounded bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
+
+
+        <script>
+          (function(){
+            try{
+              var path = location.pathname.replace(/\/$/, '') || '/';
+              var map = {'/':'home','/completed':'completed'};
+              var key = map[path] || null;
+              if(key){
+                var el = document.querySelector('a[data-nav="' + key + '"]');
+                if(el){ el.classList.add('font-semibold','text-indigo-900'); }
+              }
+            }catch(e){/* noop */}
+          })();
+        </script>
       </header>
+      <nav class="mt-3">
+        <a href="/" data-nav="home" class="mr-4 text-indigo-600">Home</a>
+        <a href="/completed/" data-nav="completed" class="text-indigo-600">Completed</a>
+      </nav>
 
       <div id="completed-root"></div>
     </div>
