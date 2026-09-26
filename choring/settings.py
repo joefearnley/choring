@@ -15,6 +15,14 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Load environment variables from a local .env file when present (optional)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(BASE_DIR, '.env'))
+except Exception:
+    # dotenv not installed or .env missing — environment vars will be read from the OS
+    pass
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -82,6 +90,44 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+# If a DATABASE_URL is provided (e.g. from Supabase), use it to configure DATABASES.
+# Supports Postgres/MySQL/SQLite URLs. Uses dj-database-url if available, otherwise
+# falls back to a minimal parser using urllib.parse.
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    try:
+        import dj_database_url
+        DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    except Exception:
+        # Minimal URL parsing fallback (covers common Postgres URLs)
+        from urllib.parse import urlparse
+        url = urlparse(DATABASE_URL)
+        scheme = url.scheme
+        if scheme.startswith('postgres') or scheme.startswith('postgresql'):
+            engine = 'django.db.backends.postgresql'
+        elif scheme.startswith('mysql'):
+            engine = 'django.db.backends.mysql'
+        elif scheme.startswith('sqlite'):
+            engine = 'django.db.backends.sqlite3'
+        else:
+            engine = 'django.db.backends.postgresql'
+
+        if engine == 'django.db.backends.sqlite3':
+            # sqlite:///absolute/path or sqlite:///:memory:
+            path = url.path or ''
+            name = path if path else os.path.join(BASE_DIR, 'db.sqlite3')
+            DATABASES['default'] = {'ENGINE': engine, 'NAME': name}
+        else:
+            name = url.path[1:] if url.path.startswith('/') else url.path
+            DATABASES['default'] = {
+                'ENGINE': engine,
+                'NAME': name,
+                'USER': url.username or '',
+                'PASSWORD': url.password or '',
+                'HOST': url.hostname or '',
+                'PORT': url.port or '',
+            }
 
 
 # Password validation

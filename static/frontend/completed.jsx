@@ -14,7 +14,6 @@ function CompletedPage(){
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Recently Completed</h2>
         <div className="text-sm text-gray-500">Showing last {items.length} items</div>
-        <div class="mt-3 h-1 w-32 rounded bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
       </div>
       <ul className="space-y-3">
         {items.map((it,i)=>(
