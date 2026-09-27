@@ -94,8 +94,12 @@ DATABASES = {
 # If a DATABASE_URL is provided (e.g. from Supabase), use it to configure DATABASES.
 # Supports Postgres/MySQL/SQLite URLs. Uses dj-database-url if available, otherwise
 # falls back to a minimal parser using urllib.parse.
+# Only use `DATABASE_URL` for production when explicitly enabled.
+# This keeps local development on the default SQLite DB unless you set
+# `USE_ENV_DATABASE=true` in the environment (or .env).
+USE_ENV_DATABASE = os.environ.get('USE_ENV_DATABASE', 'False').lower() in ('1', 'true', 'yes')
 DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL:
+if USE_ENV_DATABASE and DATABASE_URL:
     try:
         import dj_database_url
         DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)

@@ -10,7 +10,7 @@ function CompletedPage(){
   if (items === null) return <div className="text-center text-gray-500">Loading completed…</div>;
   if (items.length === 0) return <div className="text-gray-500">No completed chores yet.</div>;
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-5">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Recently Completed</h2>
         <div className="text-sm text-gray-500">Showing last {items.length} items</div>

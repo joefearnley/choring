@@ -12,8 +12,10 @@
         <h1 class="text-3xl font-bold text-indigo-700">Completed Chores</h1>
         <p class="text-sm text-indigo-600">Recently completed chores with option to uncomplete.</p>
         <div class="mt-3 h-1 w-32 rounded bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
-
-
+        <nav class="mt-6">
+          <a href="/" data-nav="home" class="mr-4 text-indigo-600">Home</a>
+          <a href="/completed/" data-nav="completed" class="text-indigo-600">Completed</a>
+        </nav>
         <script>
           (function(){
             try{
@@ -22,17 +24,16 @@
               var key = map[path] || null;
               if(key){
                 var el = document.querySelector('a[data-nav="' + key + '"]');
+
+                console.log('a[data-nav="' + key + '"]');
+                console.log('nav', key, el);
+
                 if(el){ el.classList.add('font-semibold','text-indigo-900'); }
               }
             }catch(e){/* noop */}
           })();
         </script>
       </header>
-      <nav class="mt-3">
-        <a href="/" data-nav="home" class="mr-4 text-indigo-600">Home</a>
-        <a href="/completed/" data-nav="completed" class="text-indigo-600">Completed</a>
-      </nav>
-
       <div id="completed-root"></div>
     </div>
 
