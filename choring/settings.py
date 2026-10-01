@@ -28,7 +28,9 @@ except Exception:
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '^15o7tapg3xyfv8bx#lm!b(385((9&)c%7e06@@dlhzso)n+gx'
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError('SECRET_KEY must be set in the environment or .env file')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -91,47 +93,11 @@ DATABASES = {
     }
 }
 
-# If a DATABASE_URL is provided (e.g. from Supabase), use it to configure DATABASES.
-# Supports Postgres/MySQL/SQLite URLs. Uses dj-database-url if available, otherwise
-# falls back to a minimal parser using urllib.parse.
-# Only use `DATABASE_URL` for production when explicitly enabled.
-# This keeps local development on the default SQLite DB unless you set
-# `USE_ENV_DATABASE=true` in the environment (or .env).
-USE_ENV_DATABASE = os.environ.get('USE_ENV_DATABASE', 'False').lower() in ('1', 'true', 'yes')
+# Keep SQLite as the default, and use the configured URL when one is present.
 DATABASE_URL = os.environ.get('DATABASE_URL')
-if USE_ENV_DATABASE and DATABASE_URL:
-    try:
-        import dj_database_url
-        DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-    except Exception:
-        # Minimal URL parsing fallback (covers common Postgres URLs)
-        from urllib.parse import urlparse
-        url = urlparse(DATABASE_URL)
-        scheme = url.scheme
-        if scheme.startswith('postgres') or scheme.startswith('postgresql'):
-            engine = 'django.db.backends.postgresql'
-        elif scheme.startswith('mysql'):
-            engine = 'django.db.backends.mysql'
-        elif scheme.startswith('sqlite'):
-            engine = 'django.db.backends.sqlite3'
-        else:
-            engine = 'django.db.backends.postgresql'
-
-        if engine == 'django.db.backends.sqlite3':
-            # sqlite:///absolute/path or sqlite:///:memory:
-            path = url.path or ''
-            name = path if path else os.path.join(BASE_DIR, 'db.sqlite3')
-            DATABASES['default'] = {'ENGINE': engine, 'NAME': name}
-        else:
-            name = url.path[1:] if url.path.startswith('/') else url.path
-            DATABASES['default'] = {
-                'ENGINE': engine,
-                'NAME': name,
-                'USER': url.username or '',
-                'PASSWORD': url.password or '',
-                'HOST': url.hostname or '',
-                'PORT': url.port or '',
-            }
+if DATABASE_URL:
+    import dj_database_url
+    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
 
 
 # Password validation
