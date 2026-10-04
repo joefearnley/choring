@@ -6,22 +6,25 @@ Let's do some chores
 - SPA (frontend): `/` (also available at `/app/`)
 - API root (DRF): `/api/` — example: `/api/chores/week/`
 
-Run locally:
+## Local setup
+
+Create a virtual environment and install the project requirements:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+Run the development server:
 
 ```bash
 .venv/bin/python manage.py runserver
 # then open http://127.0.0.1:8000/
 ```
 
-## Supabase database (local development)
+## Database Setup
 
 The project uses `db.sqlite3` unless `DATABASE_URL` is set. To use Supabase, create a `.env` file in the project root and set `DATABASE_URL` to the PostgreSQL connection URI from your Supabase dashboard (not the project's `https://` API URL). Use a connection string with SSL enabled (`sslmode=require`); keep the password out of source control. `.env` is ignored by Git.
-
-Install the dependencies after updating `requirements.txt`:
-
-```bash
-.venv/bin/pip install -r requirements.txt
-```
 
 To copy the existing SQLite data, explicitly clear `DATABASE_URL` for the export so it reads `db.sqlite3`:
 
