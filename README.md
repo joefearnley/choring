@@ -22,6 +22,8 @@ Run the development server:
 # then open http://127.0.0.1:8000/
 ```
 
+Set `ALLOWED_HOSTS` in the root `.env` file as a comma-separated list of hostnames. For local development, use `ALLOWED_HOSTS=localhost,127.0.0.1`; add your deployment hostnames when deploying.
+
 ## Database Setup
 
 The project uses `db.sqlite3` unless `DATABASE_URL` is set. To use Supabase, create a `.env` file in the project root and set `DATABASE_URL` to the PostgreSQL connection URI from your Supabase dashboard (not the project's `https://` API URL). Use a connection string with SSL enabled (`sslmode=require`); keep the password out of source control. `.env` is ignored by Git.
