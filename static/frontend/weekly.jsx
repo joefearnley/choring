@@ -13,12 +13,16 @@ function groupByDate(items){
   return map;
 }
 
+function occurrenceKey(item) {
+  return `${item.chore_id || item.id}:${item.date}`;
+}
+
 function escapeHtml(str){
   if (!str) return '';
   return String(str).replace(/[&<>"']/g, function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m];});
 }
 
-function DayColumn({date, items}){
+function DayColumn({date, items, onComplete, pendingCompletions}){
   const dt = new Date(date);
   return (
     <div className="bg-white shadow-lg rounded-lg p-4 hover:shadow-xl transition-shadow">
@@ -44,7 +48,10 @@ function DayColumn({date, items}){
               {item.completed ? (
                 <span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Done</span>
               ) : (
-                <button onClick={async (e)=>{ e.currentTarget.disabled = true; await fetch('/api/chores/complete/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chore_id: item.chore_id || item.id, date: item.date})}); const today = new Date(); const start = startOfISODate(addDays(today, -28)); const end = startOfISODate(addDays(today, 28)); fetchRange(start, end).then(data => setItems(data)); }} className="text-xs bg-blue-600 text-white px-3 py-1 rounded shadow">Complete</button>
+                <button onClick={() => onComplete(item)} disabled={pendingCompletions.has(occurrenceKey(item))} aria-busy={pendingCompletions.has(occurrenceKey(item))} className="inline-flex items-center space-x-1 text-sm bg-blue-100 text-blue-800 border border-blue-200 px-4 py-2 rounded hover:bg-blue-200 transition-colors disabled:opacity-70">
+                  {pendingCompletions.has(occurrenceKey(item)) && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />}
+                  {pendingCompletions.has(occurrenceKey(item)) ? 'Completing…' : 'Complete'}
+                </button>
               )}
             </div>
           </li>
@@ -74,12 +81,44 @@ function weekStartISO(d){
 
 function App(){
   const [items, setItems] = useState(null);
+  const [completionFeedback, setCompletionFeedback] = useState(null);
+  const [pendingCompletions, setPendingCompletions] = useState(() => new Set());
   useEffect(() => {
     const today = new Date();
     const start = startOfISODate(addDays(today, -28));
     const end = startOfISODate(addDays(today, 28));
     fetchRange(start, end).then(data => setItems(data));
   }, []);
+
+  async function completeOccurrence(item) {
+    const key = occurrenceKey(item);
+    setPendingCompletions(current => new Set(current).add(key));
+    setCompletionFeedback(null);
+    try {
+      const response = await fetch('/api/chores/complete/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({chore_id: item.chore_id || item.id, date: item.date}),
+      });
+      if (!response.ok) throw new Error(`Request failed (${response.status})`);
+
+      const today = new Date();
+      const start = startOfISODate(addDays(today, -28));
+      const end = startOfISODate(addDays(today, 28));
+      const updatedItems = await fetchRange(start, end);
+      setItems(updatedItems);
+      setCompletionFeedback({type: 'success', text: `${item.title} marked complete.`});
+    } catch (error) {
+      console.error(error);
+      setCompletionFeedback({type: 'error', text: `Could not complete ${item.title}. Please try again.`});
+    } finally {
+      setPendingCompletions(current => {
+        const updated = new Set(current);
+        updated.delete(key);
+        return updated;
+      });
+    }
+  }
 
   if (items === null) return <div className="text-center text-gray-500">Loading chores…</div>;
 
@@ -98,6 +137,11 @@ function App(){
 
   return (
     <div className="space-y-6">
+      {completionFeedback && (
+        <div role={completionFeedback.type === 'error' ? 'alert' : 'status'} className={completionFeedback.type === 'error' ? 'rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800' : 'rounded border border-green-200 bg-green-50 p-3 text-sm text-green-800'}>
+          {completionFeedback.text}
+        </div>
+      )}
       {overdue.length > 0 && (
         <section>
           <h2 className="text-xl font-semibold text-red-700">Past Due</h2>
@@ -113,7 +157,7 @@ function App(){
                       </div>
                       <div className="flex items-center space-x-3">
                         {it.assigned_to ? (() => { const color = it.assigned_color || 'indigo'; const cls = `inline-block bg-${color}-100 text-${color}-800 px-3 py-1 rounded-full text-xs font-semibold`; return <span className={cls}>{it.assigned_to}</span>; })() : (<span className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Unassigned</span>)}
-                        {it.completed ? (<span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Done</span>) : (<button onClick={async (e)=>{ e.currentTarget.disabled = true; await fetch('/api/chores/complete/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chore_id: it.chore_id || it.id, date: it.date})}); const today = new Date(); const start = startOfISODate(addDays(today, -28)); const end = startOfISODate(addDays(today, 28)); fetchRange(start, end).then(data => setItems(data)); }} className="text-xs bg-blue-500 text-white px-3 py-1 rounded shadow">Complete</button>)}
+                        {it.completed ? (<span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Done</span>) : (() => { const isCompleting = pendingCompletions.has(occurrenceKey(it)); return (<button onClick={() => completeOccurrence(it)} disabled={isCompleting} aria-busy={isCompleting} className="inline-flex items-center space-x-1 text-sm bg-blue-100 text-blue-800 border border-blue-200 px-4 py-2 rounded hover:bg-blue-200 transition-colors disabled:opacity-70">{isCompleting && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />}{isCompleting ? 'Completing…' : 'Complete'}</button>); })()}
                       </div>
                     </li>
                   ))}
@@ -141,7 +185,7 @@ function App(){
                     </div>
                     <div className="text-sm flex items-center space-x-3">
                       {it.assigned_to ? (() => { const color = it.assigned_color || 'indigo'; const cls = `inline-block bg-${color}-100 text-${color}-800 px-3 py-1 rounded-full text-xs font-semibold`; return <span className={cls}>{it.assigned_to}</span>; })() : (<span className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Unassigned</span>)}
-                      {it.completed ? (<span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Done</span>) : (<button onClick={async (e)=>{ e.currentTarget.disabled = true; await fetch('/api/chores/complete/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chore_id: it.chore_id || it.id, date: it.date})}); const today = new Date(); const start = startOfISODate(addDays(today, -28)); const end = startOfISODate(addDays(today, 28)); fetchRange(start, end).then(data => setItems(data)); }} className="text-xs bg-blue-500 text-white px-3 py-1 rounded shadow">Complete</button>)}
+                      {it.completed ? (<span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Done</span>) : (() => { const isCompleting = pendingCompletions.has(occurrenceKey(it)); return (<button onClick={() => completeOccurrence(it)} disabled={isCompleting} aria-busy={isCompleting} className="inline-flex items-center space-x-1 text-sm bg-blue-100 text-blue-800 border border-blue-200 px-4 py-2 rounded hover:bg-blue-200 transition-colors disabled:opacity-70">{isCompleting && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />}{isCompleting ? 'Completing…' : 'Complete'}</button>); })()}
                     </div>
                   </li>
                 ))}
